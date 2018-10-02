@@ -1,50 +1,57 @@
-
-<mat-card>    
-  <mat-card-title>    
-      {{currentQuestion.header}}  
-  </mat-card-title>    
-  <mat-card-content>    
-          <table>    
-              <tr *ngIf="currentQuestion.type === QuestionType.Textual">    
-                  <td>    
-                      <mat-form-field class="full-width">    
-                          <input [(ngModel)]="currentQuestion.answer" matInput/>    
-                      </mat-form-field>    
-                  </td>    
-              </tr>
-              <tr *ngIf="currentQuestion.type === QuestionType.Numeric">    
-                  <td>    
-                      <mat-form-field class="full-width">    
-                          <input [(ngModel)]="currentQuestion.answer" matInput type="number" min="0"/>  
-                      </mat-form-field>    
-                  </td>    
-              </tr>
-              <tr *ngIf="currentQuestion.type === QuestionType.ChooseOne">   
-                  <td>    
-                      <mat-radio-group [(ngModel)]="currentQuestion.answer">    
-                        <div *ngFor="let choice of currentQuestion.choices"  style="padding: .4em">
-                          <mat-radio-button [value]="choice" color="primary">{{choice}}</mat-radio-button>  
-                        </div>
-                      </mat-radio-group>    
-                  </td>    
-              </tr>       
-              <tr *ngIf="currentQuestion.type === QuestionType.ChooseMany">   
-                  <td>    
-                      <mat-radio-group [(ngModel)]="currentQuestion.answer">    
-                        <div *ngFor="let choice of currentQuestion.choices"  style="padding: .4em">
-                          <mat-checkbox>{{choice}}</mat-checkbox>
-                        </div>
-                      </mat-radio-group>    
-                  </td>    
-              </tr>       
-              <br>
-              <mat-divider></mat-divider>
-              <br>
-              <tr>    
-                  <td colspan="2" class="content-center">    
-                      <button  color="primary" (click)="submit()" mat-raised-button>Submit</button> 
-                  </td>    
-              </tr>    
-          </table>    
-  </mat-card-content>    
+<mat-card>
+  <mat-card-title>
+    {{currentQuestion.header}}
+  </mat-card-title>
+  <mat-card-content>
+    <table>
+      <tr *ngIf="currentQuestion.type === QuestionType.Textual">
+        <td>
+          <mat-form-field class="full-width">
+            <input [(ngModel)]="currentQuestion.answer" required [pattern]="currentQuestion.validation" matInput #input="ngModel"
+              (keyup)='inputUpdated()' />
+          </mat-form-field>
+          <div *ngIf="input.errors?.pattern" class="error-message">
+            Input not valid.
+          </div>
+        </td>
+      </tr>
+      <tr *ngIf="currentQuestion.type === QuestionType.Numeric">
+        <td>
+          <mat-form-field class="full-width">
+            <input [(ngModel)]="currentQuestion.answer" matInput type="number" min="0" (keyup)='inputUpdated()'/>
+          </mat-form-field>
+        </td>
+      </tr>
+      <tr *ngIf="currentQuestion.type === QuestionType.RadioButton">
+        <td>
+          <mat-radio-group [(ngModel)]="currentQuestion.answer" (change)='inputUpdated()'>
+            <div *ngFor="let choice of currentQuestion.fields" style="padding: .4em">
+              <mat-radio-button [value]="choice" color="primary">{{choice}}</mat-radio-button>
+            </div>
+          </mat-radio-group>
+        </td>
+      </tr>
+      <tr *ngIf="currentQuestion.type === QuestionType.CheckBox">
+        <td>
+          <mat-radio-group [(ngModel)]="currentQuestion.fields" (change)='inputUpdated()'>
+            <div *ngFor="let choice of currentQuestion.choices" style="padding: .4em">
+              <mat-checkbox>{{choice}}</mat-checkbox>
+            </div>
+          </mat-radio-group>
+        </td>
+      </tr>
+      <br>
+      <mat-divider></mat-divider>
+      <br>
+      <tr>
+        <td colspan="2" class="content-center">
+          <button color="primary" (click)="submit()" mat-raised-button [disabled]="disabled">Submit</button>
+        </td>
+      </tr>
+    </table>
+  </mat-card-content>
 </mat-card>
+
+<pre style="color:white">
+  {{form | json}}
+</pre>

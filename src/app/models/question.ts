@@ -1,8 +1,11 @@
 export enum QuestionType {
     Numeric,
     Textual,
-    ChooseOne,
-    ChooseMany
+    CheckBox,
+    CheckBoxWithImages,
+    RadioButton,
+    RadioButtonWithImages,
+    Form
 }
 
 export interface Question {
@@ -10,7 +13,18 @@ export interface Question {
     header: string;
     answer?: string;
     type: QuestionType;
-    choices?: string[];
+    fields?: any[];
     nextQuestionId?: number;
-    nextQuestions?: {};
+    nextQuestions?: any[];
+    variable?: string;
+    validation?: string;
+}
+
+export interface Form {
+    variables: {};
+    questions: Question[];
+    backgroundUrl: string;
+    currentQuestionId?: number;
+    currentQuestions?: number[];
+    finalMessage?: string;
 }
