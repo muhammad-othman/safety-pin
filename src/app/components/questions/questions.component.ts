@@ -53,6 +53,7 @@ export class QuestionsComponent implements OnInit {
 
   public submit() {
     if (this.currentQuestion.nextQuestionId) {
+      console.log(this.currentQuestion);
       this.currentQuestion = this.questions.find(e => e.id === this.currentQuestion.nextQuestionId);
     } else if (this.currentQuestion.answer && this.currentQuestion.nextQuestions) {
       this.currentQuestion = this.questions.find(e =>
