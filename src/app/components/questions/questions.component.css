@@ -49,3 +49,19 @@ mat-toolbar-row {
   color: #ff5722;
   margin-top: -10px;
 }
+
+.right-button {
+  position: absolute;
+  right: 2em;
+  bottom: 1em;
+  font-size: xx-large;
+  font-family: monospace;
+}
+
+.left-button {
+  position: absolute;
+  left: 1em;
+  bottom: 1em;
+  font-size: xx-large;
+  font-family: monospace;
+}

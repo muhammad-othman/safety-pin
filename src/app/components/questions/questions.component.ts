@@ -15,6 +15,8 @@ export class QuestionsComponent implements OnInit {
   currentQuestion: Question;
   QuestionType: any = QuestionType;
   disabled = true;
+  localStorage = window.localStorage;
+  otherAnswer: string;
 
   constructor() { }
 
@@ -31,7 +33,7 @@ export class QuestionsComponent implements OnInit {
           {
             id: 1,
             header: 'Enter Your Name',
-            // validation: '^[a-zA-Z ]{1,10}$',
+            validation: '^[a-zA-Z ]{1,10}$',
             type: QuestionType.Textual,
             variable: 'name',
             nextQuestionId: 2
@@ -119,21 +121,36 @@ export class QuestionsComponent implements OnInit {
           }
         ]
     };
+    const jsonObject = this.localStorage.getItem('formObject');
+    if (jsonObject) {
+      this.form = JSON.parse(jsonObject);
+    }
     this.currentQuestion = this.form.questions.find(e => e.id === this.form.currentQuestionId);
+    this.verifyDisabled();
   }
 
-  public inputUpdated() {
+  public verifyDisabled() {
     if (this.currentQuestion.type === QuestionType.Textual) {
-      if (this.currentQuestion.validation && !new RegExp(this.currentQuestion.validation).test(this.currentQuestion.answer)) {
+      if (!this.currentQuestion.answer) {
+        this.disabled = true;
+      } else if (this.currentQuestion.validation &&
+        !new RegExp(this.currentQuestion.validation).test(this.currentQuestion.answer)) {
         this.disabled = true;
       } else {
         this.disabled = false;
       }
     } else if (this.currentQuestion.type === QuestionType.RadioButton || this.currentQuestion.type === QuestionType.RadioButtonWithImages) {
-      this.disabled = false;
+      if (this.currentQuestion.answer && this.currentQuestion.answer !== 'Other') {
+        this.disabled = false;
+      } else if (this.currentQuestion.answer === 'Other' && this.currentQuestion.otherAnswer) {
+        this.disabled = false;
+      } else {
+        this.disabled = true;
+      }
+    } else {
+      this.disabled = true;
     }
   }
-
 
   public submit() {
     if (this.currentQuestion.variable) {
@@ -152,10 +169,21 @@ export class QuestionsComponent implements OnInit {
         this.form.currentQuestionId = this.currentQuestion.nextQuestions[this.currentQuestion.fields.indexOf(this.currentQuestion.answer)];
       }
     }
-
+    const previousQuestionId = this.currentQuestion.id;
     this.currentQuestion = this.form.questions.find(e => e.id === this.form.currentQuestionId);
+    this.currentQuestion.previousQuestionId = previousQuestionId;
     this.replaceVariables();
-    this.disabled = true;
+    this.verifyDisabled();
+
+    this.localStorage.setItem('formObject', JSON.stringify(this.form));
+  }
+
+  public back() {
+    this.form.currentQuestionId = this.currentQuestion.previousQuestionId;
+    this.currentQuestion = this.form.questions.find(e => e.id === this.form.currentQuestionId);
+    this.verifyDisabled();
+
+    this.localStorage.setItem('formObject', JSON.stringify(this.form));
   }
 
   private replaceVariables() {
@@ -164,6 +192,110 @@ export class QuestionsComponent implements OnInit {
       const variable = arr[index].split(']')[0];
       this.currentQuestion.header = this.currentQuestion.header.replace('[' + variable + ']', this.form.variables[variable]);
     }
+  }
+
+  public reset() {
+    this.form = {
+      backgroundUrl: '../assets/background.jpeg',
+      currentQuestionId: 1,
+      variables: {},
+      questions:
+        [
+          {
+            id: 1,
+            header: 'Enter Your Name',
+            validation: '^[a-zA-Z ]{1,10}$',
+            type: QuestionType.Textual,
+            variable: 'name',
+            nextQuestionId: 2
+          }, {
+            id: 2,
+            header: 'Welcome [name], what state do you live in?',
+            type: QuestionType.RadioButton,
+            fields: ['state1', 'state2', 'state3'],
+            nextQuestionId: 3
+          }, {
+            id: 3,
+            header: 'What do you like?',
+            type: QuestionType.RadioButton,
+            fields: ['Cookies ', 'Ice cream'],
+            nextQuestions: [4, 5]
+          }, {
+            id: 4,
+            header: 'Great: What is your favorite cookie?',
+            type: QuestionType.RadioButton,
+            fields: ['Oreos', 'Chips Ahoy', 'Other'],
+            nextQuestionId: 6
+          }, {
+            id: 5,
+            header: 'Great, What is your favorite flavor?',
+            type: QuestionType.RadioButton,
+            fields: ['Vanilla', 'Chocolate', 'Other'],
+            nextQuestionId: 6
+          }, {
+            id: 6,
+            header: 'What are you favorite movie Genres?',
+            type: QuestionType.CheckBoxWithImages,
+            fields: [
+              {
+                text: 'Horror',
+                url: 'url1'
+              }, {
+                text: 'Comedy',
+                url: 'url1'
+              }, {
+                text: 'Romantic',
+                url: 'url1'
+              }
+            ],
+            nextQuestions: [7, 8, 9],
+            variable: 'genre'
+          }, {
+            id: 7,
+            header: 'Is Boris Karlov your favorite actor?',
+            type: QuestionType.RadioButton,
+            fields: ['Yes', 'No'],
+            nextQuestionId: 10
+          }, {
+            id: 8,
+            header: 'Is Adam Sander funnier than David Spade?',
+            type: QuestionType.RadioButton,
+            fields: ['Yes', 'No'],
+            nextQuestionId: 10
+          }, {
+            id: 9,
+            header: 'Team Pitt or Team Clooney?',
+            type: QuestionType.RadioButton,
+            fields: ['Team Pitt', 'Team Cooney', 'Other'],
+            nextQuestionId: 10
+          }, {
+            id: 10,
+            header: 'What is your favorite movie?',
+            type: QuestionType.Form,
+            fields: [
+              {
+                text: 'MovieName'
+              }, {
+                text: 'MovieGenere'
+              }, {
+                text: 'DateReleased',
+                // tslint:disable-next-line:max-line-length
+                // regex: new RegExp('^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[1,3-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$')
+              }
+            ],
+            nextQuestionId: 11
+          }, {
+            id: 7,
+            header: 'Did you enjoy taking this survey?',
+            type: QuestionType.RadioButton,
+            fields: ['Yes', 'No']
+          }
+        ]
+    };
+
+    this.currentQuestion = this.form.questions.find(e => e.id === this.form.currentQuestionId);
+    this.localStorage.setItem('formObject', JSON.stringify(this.form));
+    this.verifyDisabled();
   }
 
 }

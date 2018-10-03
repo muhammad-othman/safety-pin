@@ -12,12 +12,14 @@ export interface Question {
     id: number;
     header: string;
     answer?: string;
+    otherAnswer?: string;
     type: QuestionType;
     fields?: any[];
     nextQuestionId?: number;
     nextQuestions?: any[];
     variable?: string;
     validation?: string;
+    previousQuestionId?: number;
 }
 
 export interface Form {

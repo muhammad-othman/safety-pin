@@ -8,7 +8,7 @@
         <td>
           <mat-form-field class="full-width">
             <input [(ngModel)]="currentQuestion.answer" required [pattern]="currentQuestion.validation" matInput #input="ngModel"
-              (keyup)='inputUpdated()' />
+              (keyup)='verifyDisabled()' />
           </mat-form-field>
           <div *ngIf="input.errors?.pattern" class="error-message">
             Input not valid.
@@ -18,22 +18,25 @@
       <tr *ngIf="currentQuestion.type === QuestionType.Numeric">
         <td>
           <mat-form-field class="full-width">
-            <input [(ngModel)]="currentQuestion.answer" matInput type="number" min="0" (keyup)='inputUpdated()'/>
+            <input [(ngModel)]="currentQuestion.answer" matInput type="number" min="0" (keyup)='verifyDisabled()'/>
           </mat-form-field>
         </td>
       </tr>
       <tr *ngIf="currentQuestion.type === QuestionType.RadioButton">
         <td>
-          <mat-radio-group [(ngModel)]="currentQuestion.answer" (change)='inputUpdated()'>
+          <mat-radio-group [(ngModel)]="currentQuestion.answer" (change)='verifyDisabled()'>
             <div *ngFor="let choice of currentQuestion.fields" style="padding: .4em">
               <mat-radio-button [value]="choice" color="primary">{{choice}}</mat-radio-button>
             </div>
           </mat-radio-group>
+          <mat-form-field *ngIf="currentQuestion.answer == 'Other'">
+            <input [(ngModel)]="currentQuestion.otherAnswer" required matInput (keyup)='verifyDisabled()' />
+          </mat-form-field>
         </td>
       </tr>
       <tr *ngIf="currentQuestion.type === QuestionType.CheckBox">
         <td>
-          <mat-radio-group [(ngModel)]="currentQuestion.fields" (change)='inputUpdated()'>
+          <mat-radio-group [(ngModel)]="currentQuestion.fields" (change)='verifyDisabled()'>
             <div *ngFor="let choice of currentQuestion.choices" style="padding: .4em">
               <mat-checkbox>{{choice}}</mat-checkbox>
             </div>
@@ -44,14 +47,18 @@
       <mat-divider></mat-divider>
       <br>
       <tr>
-        <td colspan="2" class="content-center">
+        <td colspan="4" class="content-center">
           <button color="primary" (click)="submit()" mat-raised-button [disabled]="disabled">Submit</button>
         </td>
       </tr>
+     <br>
     </table>
+    <button color="primary" class="right-button" (click)="submit()" mat-raised-button [disabled]="disabled">></button>
+    <button color="warn" class="left-button" (click)="back()" mat-raised-button [disabled]="!currentQuestion.previousQuestionId"><</button>
   </mat-card-content>
 </mat-card>
 
-<pre style="color:white">
+<button color="warn" class="right-button" (click)="reset()" mat-raised-button>Reset</button>
+<!-- <pre style="color:white">
   {{form | json}}
-</pre>
+</pre> -->
