@@ -25,6 +25,7 @@ export class QuestionsComponent implements OnInit {
   }
   loadQuestions(): any {
     this.form = {
+      finalMessage: 'Thanks for taking the survey',
       backgroundUrl: '../assets/background.jpeg',
       currentQuestionId: 1,
       variables: {},
@@ -68,32 +69,34 @@ export class QuestionsComponent implements OnInit {
             fields: [
               {
                 text: 'Horror',
-                url: 'url1'
+                url: 'url1',
+                nextQuestionId: 7
               }, {
                 text: 'Comedy',
-                url: 'url1'
+                url: 'url1',
+                nextQuestionId: 8
               }, {
                 text: 'Romantic',
-                url: 'url1'
+                url: 'url1',
+                nextQuestionId: 9
               }
             ],
-            nextQuestions: [7, 8, 9],
             variable: 'genre'
           }, {
             id: 7,
-            header: 'Is Boris Karlov your favorite actor?',
+            header: 'Is Boris Karlov your favorite actor? Horror',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No'],
             nextQuestionId: 10
           }, {
             id: 8,
-            header: 'Is Adam Sander funnier than David Spade?',
+            header: 'Is Adam Sander funnier than David Spade? Comedy',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No'],
             nextQuestionId: 10
           }, {
             id: 9,
-            header: 'Team Pitt or Team Clooney?',
+            header: 'Team Pitt or Team Clooney? Romantic',
             type: QuestionType.RadioButton,
             fields: ['Team Pitt', 'Team Cooney', 'Other'],
             nextQuestionId: 10
@@ -103,18 +106,17 @@ export class QuestionsComponent implements OnInit {
             type: QuestionType.Form,
             fields: [
               {
-                text: 'MovieName'
+                label: 'MovieName'
               }, {
-                text: 'MovieGenere'
+                label: 'MovieGenere'
               }, {
-                text: 'DateReleased',
-                // tslint:disable-next-line:max-line-length
-                // regex: new RegExp('^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[1,3-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$')
+                label: 'Date Released',
+                // validation : '/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/'
               }
             ],
             nextQuestionId: 11
           }, {
-            id: 7,
+            id: 11,
             header: 'Did you enjoy taking this survey?',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No']
@@ -147,6 +149,25 @@ export class QuestionsComponent implements OnInit {
       } else {
         this.disabled = true;
       }
+    } else if (this.currentQuestion.type === QuestionType.CheckBox || this.currentQuestion.type === QuestionType.CheckBoxWithImages) {
+      if (this.currentQuestion.answers && this.currentQuestion.answers.length > 0) {
+        this.disabled = false;
+      } else {
+        this.disabled = true;
+      }
+    } else if (this.currentQuestion.type === QuestionType.Form) {
+
+      // tslint:disable-next-line:forin
+      // tslint:disable-next-line:prefer-const
+      for (let propertyName in this.currentQuestion.fields) {
+
+        if (!this.currentQuestion.fields[propertyName].answer) {
+          this.disabled = true;
+          return;
+        }
+      }
+      this.disabled = false;
+
     } else {
       this.disabled = true;
     }
@@ -158,16 +179,20 @@ export class QuestionsComponent implements OnInit {
         this.form.variables[this.currentQuestion.variable] = this.currentQuestion.answer;
       }
     }
-    if (this.form.currentQuestions && this.form.currentQuestions.length) {
-      this.currentQuestion.nextQuestionId = this.form.currentQuestions.pop();
+    if (this.currentQuestion.nextQuestions && this.currentQuestion.type === QuestionType.CheckBoxWithImages ) {
+      this.form.currentQuestions = [...this.currentQuestion.nextQuestions];
     }
-
-    if (this.currentQuestion.nextQuestionId) {
+    if (this.form.currentQuestions && this.form.currentQuestions.length) {
+      this.form.currentQuestionId = this.form.currentQuestions.pop();
+    } else if (this.currentQuestion.nextQuestionId) {
       this.form.currentQuestionId = this.currentQuestion.nextQuestionId;
     } else if (this.currentQuestion.nextQuestions) {
       if (this.currentQuestion.type === QuestionType.RadioButton || this.currentQuestion.type === QuestionType.RadioButtonWithImages) {
         this.form.currentQuestionId = this.currentQuestion.nextQuestions[this.currentQuestion.fields.indexOf(this.currentQuestion.answer)];
       }
+    } else {
+      delete this.currentQuestion;
+      return;
     }
     const previousQuestionId = this.currentQuestion.id;
     this.currentQuestion = this.form.questions.find(e => e.id === this.form.currentQuestionId);
@@ -186,6 +211,22 @@ export class QuestionsComponent implements OnInit {
     this.localStorage.setItem('formObject', JSON.stringify(this.form));
   }
 
+  public checkBoxChanged(checked, choice) {
+    if (checked) {
+      if (this.currentQuestion.answers) {
+        this.currentQuestion.answers.push(choice.text);
+        this.currentQuestion.nextQuestions.push(choice.nextQuestionId);
+      } else {
+        this.currentQuestion.answers = [choice.text];
+        this.currentQuestion.nextQuestions = [choice.nextQuestionId];
+      }
+    } else {
+      this.currentQuestion.answers.splice(this.currentQuestion.answers.indexOf(choice.text), 1);
+      this.currentQuestion.nextQuestions.splice(this.currentQuestion.nextQuestions.indexOf(choice.nextQuestionId), 1);
+    }
+
+    this.verifyDisabled();
+  }
   private replaceVariables() {
     const arr = this.currentQuestion.header.split('[');
     for (let index = 1; index < arr.length; index++) {
@@ -196,6 +237,7 @@ export class QuestionsComponent implements OnInit {
 
   public reset() {
     this.form = {
+      finalMessage: 'Thanks for taking the survey',
       backgroundUrl: '../assets/background.jpeg',
       currentQuestionId: 1,
       variables: {},
@@ -239,32 +281,34 @@ export class QuestionsComponent implements OnInit {
             fields: [
               {
                 text: 'Horror',
-                url: 'url1'
+                url: 'url1',
+                nextQuestionId: 7
               }, {
                 text: 'Comedy',
-                url: 'url1'
+                url: 'url1',
+                nextQuestionId: 8
               }, {
                 text: 'Romantic',
-                url: 'url1'
+                url: 'url1',
+                nextQuestionId: 9
               }
             ],
-            nextQuestions: [7, 8, 9],
             variable: 'genre'
           }, {
             id: 7,
-            header: 'Is Boris Karlov your favorite actor?',
+            header: 'Is Boris Karlov your favorite actor? {Horror}',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No'],
             nextQuestionId: 10
           }, {
             id: 8,
-            header: 'Is Adam Sander funnier than David Spade?',
+            header: 'Is Adam Sander funnier than David Spade? {Comedy}',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No'],
             nextQuestionId: 10
           }, {
             id: 9,
-            header: 'Team Pitt or Team Clooney?',
+            header: 'Team Pitt or Team Clooney? {Romantic}',
             type: QuestionType.RadioButton,
             fields: ['Team Pitt', 'Team Cooney', 'Other'],
             nextQuestionId: 10
@@ -274,18 +318,19 @@ export class QuestionsComponent implements OnInit {
             type: QuestionType.Form,
             fields: [
               {
-                text: 'MovieName'
+                label: 'Movie Name'
               }, {
-                text: 'MovieGenere'
+                label: 'Movie Genere'
               }, {
-                text: 'DateReleased',
-                // tslint:disable-next-line:max-line-length
-                // regex: new RegExp('^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[1,3-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$')
+                label: 'Date Released',
+                // validation : '/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/'
+              } , {
+                label: ''
               }
             ],
             nextQuestionId: 11
           }, {
-            id: 7,
+            id: 11,
             header: 'Did you enjoy taking this survey?',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No']
