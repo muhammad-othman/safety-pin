@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import 'hammerjs';
 import { Question, QuestionType, Form } from '../../models/question';
-import { FormControl, Validators } from '@angular/forms';
+import { QuestionsService } from '../../services/questions.service';
 
 @Component({
   selector: 'app-questions',
@@ -18,7 +18,7 @@ export class QuestionsComponent implements OnInit {
   localStorage = window.localStorage;
   otherAnswer: string;
 
-  constructor() { }
+  constructor(private questionsService: QuestionsService) { }
 
   ngOnInit() {
     this.loadQuestions();
@@ -120,6 +120,7 @@ export class QuestionsComponent implements OnInit {
       }
     } else {
       delete this.currentQuestion;
+      this.questionsService.submitForm(this.form);
       return;
     }
     const previousQuestionId = this.currentQuestion.id;
@@ -169,10 +170,10 @@ export class QuestionsComponent implements OnInit {
     this.verifyDisabled();
   }
   private replaceVariables() {
-    const arr = this.currentQuestion.header.split('[');
+    const arr = this.currentQuestion.questionText.split('[');
     for (let index = 1; index < arr.length; index++) {
       const variable = arr[index].split(']')[0];
-      this.currentQuestion.header = this.currentQuestion.header.replace('[' + variable + ']', this.form.variables[variable]);
+      this.currentQuestion.questionText = this.currentQuestion.questionText.replace('[' + variable + ']', this.form.variables[variable]);
     }
   }
 
@@ -186,21 +187,21 @@ export class QuestionsComponent implements OnInit {
         [
           {
             id: 1,
-            header: 'Enter Your Name',
+            questionText: 'Enter Your Name',
             validation: '^[a-zA-Z ]{1,10}$',
             type: QuestionType.Textual,
             variable: 'name',
             nextQuestionId: 2
           }, {
             id: 2,
-            header: 'Welcome [name], what state do you live in?',
+            questionText: 'Welcome [name], what state do you live in?',
             type: QuestionType.RadioButton,
             fields: ['state1', 'state2', 'state3'],
             variable: 'state',
             nextQuestionId: 12
           }, {
             id: 12,
-            header: 'What county do you live in?',
+            questionText: 'What county do you live in?',
             type: QuestionType.Dropdown,
             fields: [{ key: 'state1', text: 'state11' }, { key: 'state1', text: 'state12' }, { key: 'state1', text: 'state13' },
             { key: 'state2', text: 'state21' }, { key: 'state2', text: 'state22' }, { key: 'state2', text: 'state23' },
@@ -210,25 +211,25 @@ export class QuestionsComponent implements OnInit {
             options: { filter: 'state', list: ['state3', 'state4', 'state5'] }
           }, {
             id: 3,
-            header: 'What do you like?',
+            questionText: 'What do you like?',
             type: QuestionType.RadioButton,
             fields: ['Cookies ', 'Ice cream'],
             nextQuestions: [4, 5]
           }, {
             id: 4,
-            header: 'Great: What is your favorite cookie?',
+            questionText: 'Great: What is your favorite cookie?',
             type: QuestionType.RadioButton,
             fields: ['Oreos', 'Chips Ahoy', 'Other'],
             nextQuestionId: 6
           }, {
             id: 5,
-            header: 'Great, What is your favorite flavor?',
+            questionText: 'Great, What is your favorite flavor?',
             type: QuestionType.RadioButton,
             fields: ['Vanilla', 'Chocolate', 'Other'],
             nextQuestionId: 6
           }, {
             id: 6,
-            header: 'What are you favorite movie Genres?',
+            questionText: 'What are you favorite movie Genres?',
             type: QuestionType.CheckBoxWithImages,
             fields: [
               {
@@ -248,25 +249,25 @@ export class QuestionsComponent implements OnInit {
             variable: 'genre'
           }, {
             id: 7,
-            header: 'Is Boris Karlov your favorite actor? {Horror}',
+            questionText: 'Is Boris Karlov your favorite actor? {Horror}',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No'],
             nextQuestionId: 10
           }, {
             id: 8,
-            header: 'Is Adam Sander funnier than David Spade? {Comedy}',
+            questionText: 'Is Adam Sander funnier than David Spade? {Comedy}',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No'],
             nextQuestionId: 10
           }, {
             id: 9,
-            header: 'Team Pitt or Team Clooney? {Romantic}',
+            questionText: 'Team Pitt or Team Clooney? {Romantic}',
             type: QuestionType.RadioButton,
             fields: ['Team Pitt', 'Team Cooney', 'Other'],
             nextQuestionId: 10
           }, {
             id: 10,
-            header: 'What is your favorite movie?',
+            questionText: 'What is your favorite movie?',
             type: QuestionType.Form,
             fields: [
               {
@@ -281,7 +282,7 @@ export class QuestionsComponent implements OnInit {
             nextQuestionId: 11
           }, {
             id: 11,
-            header: 'Did you enjoy taking this survey?',
+            questionText: 'Did you enjoy taking this survey?',
             type: QuestionType.RadioButton,
             fields: ['Yes', 'No']
           }

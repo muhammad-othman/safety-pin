@@ -11,7 +11,7 @@ export enum QuestionType {
 
 export interface Question {
     id: number;
-    header: string;
+    questionText: string;
     answer?: string;
     answers?: string[];
     otherAnswer?: string;

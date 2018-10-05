@@ -1,6 +1,9 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpModule } from '@angular/http';
+import { DeviceDetectorModule } from 'ngx-device-detector';
+
 import {
   MatButtonModule,
   MatDividerModule,
@@ -29,6 +32,7 @@ import { QuestionsComponent } from './components/questions/questions.component';
     QuestionsComponent
   ],
   imports: [
+    HttpModule,
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,
@@ -47,7 +51,8 @@ import { QuestionsComponent } from './components/questions/questions.component';
     MatSelectModule,
     MatOptionModule,
     MatCheckboxModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    DeviceDetectorModule.forRoot()
   ],
   exports: [
     MatButtonModule,
