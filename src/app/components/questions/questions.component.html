@@ -1,4 +1,4 @@
-<mat-card>
+<mat-card (keyup.enter)="submit()">
   <mat-card-title *ngIf="currentQuestion">
     {{currentQuestion.header}}
   </mat-card-title>
@@ -34,11 +34,32 @@
           </mat-form-field>
         </td>
       </tr>
-      <tr *ngIf="currentQuestion?.type === QuestionType.CheckBoxWithImages">
+      <tr *ngIf="currentQuestion?.type === QuestionType.CheckBox">
         <td>
           <mat-radio-group (change)='verifyDisabled()'>
             <div *ngFor="let choice of currentQuestion.fields" style="padding: .4em">
               <mat-checkbox [checked]="this.currentQuestion.nextQuestions && this.currentQuestion.nextQuestions?.indexOf(choice.nextQuestionId) >= 0" (change)="checkBoxChanged($event.checked, choice)">{{choice.text}}</mat-checkbox>
+            </div>
+          </mat-radio-group>
+        </td>
+      </tr>
+      <tr *ngIf="currentQuestion?.type === QuestionType.Dropdown">
+        <td>
+            <mat-form-field >
+                <mat-select placeholder="Select" (selectionChange)='verifyDisabled()' [(ngModel)]="currentQuestion.answer">
+                  <mat-option *ngFor="let choice of currentQuestion.options.list"  [value]="choice">
+                    {{choice}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+        </td>
+      </tr>
+      <tr *ngIf="currentQuestion?.type === QuestionType.CheckBoxWithImages">
+        <td>
+          <mat-radio-group (change)='verifyDisabled()'>
+            <div *ngFor="let choice of currentQuestion.fields" style="padding: .4em">
+              <img [src]="choice.url">
+              <mat-checkbox class="checkbox-img" [checked]="this.currentQuestion.nextQuestions && this.currentQuestion.nextQuestions?.indexOf(choice.nextQuestionId) >= 0" (change)="checkBoxChanged($event.checked, choice)">{{choice.text}}</mat-checkbox>
             </div>
           </mat-radio-group>
         </td>
@@ -73,11 +94,12 @@
      <br>
     </table>
     <button *ngIf="currentQuestion" color="primary" class="right-button" (click)="submit()" mat-raised-button [disabled]="disabled">></button>
+    <button *ngIf="currentQuestion?.type === QuestionType.Form" color="primary" class="add-button" (click)="addNewQuestion()" mat-raised-button [disabled]="disabled">+</button>
     <button *ngIf="currentQuestion" color="warn" class="left-button" (click)="back()" mat-raised-button [disabled]="!currentQuestion.previousQuestionId"><</button>
   </mat-card-content>
 </mat-card>
 
-<button color="warn" class="right-button" (click)="reset()" mat-raised-button>Reset</button>
+<button color="warn" class="right-button" (click)="resetForm()" mat-raised-button>Reset</button>
 <pre style="color:white">
-  {{form | json}}
+  {{currentQuestion | json}}
 </pre>

@@ -5,7 +5,8 @@ export enum QuestionType {
     CheckBoxWithImages = 4,
     RadioButton = 5,
     RadioButtonWithImages = 6,
-    Form = 7
+    Form = 7,
+    Dropdown = 8
 }
 
 export interface Question {
@@ -21,7 +22,7 @@ export interface Question {
     variable?: string;
     validation?: string;
     previousQuestionId?: number;
-    options?: {};
+    options?: any;
 }
 
 export interface Form {
